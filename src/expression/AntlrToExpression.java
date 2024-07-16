@@ -4,11 +4,17 @@ import antlr.ExprBaseVisitor;
 import antlr.ExprParser;
 import org.antlr.v4.runtime.Token;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class AntlrToExpression extends ExprBaseVisitor<Expression> {
     private List<String> vars; // stores all the variables declared in the program so far
     private List<String> semanticErrors; // 1. dup 2. undeclared
+
+    public AntlrToExpression(List<String> semanticErrors) {
+        vars = new ArrayList<>();
+        this.semanticErrors = semanticErrors;
+    }
 
     @Override
     public Expression visitDeclaration(ExprParser.DeclarationContext ctx) {
@@ -17,28 +23,45 @@ public class AntlrToExpression extends ExprBaseVisitor<Expression> {
         int column = idToken.getCharPositionInLine();
         String id = ctx.getChild(0).getText();
         if(vars.contains(id)) {
-            semanticErrors.add("Error : variable" + id + " alread declared ");
+            semanticErrors.add("Error : variable" + id + " alread declared (" + line + ", " + column + ")");
+        } else {
+            vars.add(id);
         }
-        return super.visitDeclaration(ctx);
+        String type = ctx.getChild(2).getText();
+        int value = Integer.parseInt(ctx.NUM().getText());
+        return new VariableDeclaration(id, type,value);
     }
 
     @Override
     public Expression visitMultiplication(ExprParser.MultiplicationContext ctx) {
-        return super.visitMultiplication(ctx);
+        Expression left = visit(ctx.getChild(0));
+        Expression right = visit(ctx.getChild(2));
+        return new Multiplication(left, right);
     }
 
     @Override
     public Expression visitAddition(ExprParser.AdditionContext ctx) {
-        return super.visitAddition(ctx);
+        Expression left = visit(ctx.getChild(0));
+        Expression right = visit(ctx.getChild(2));
+        return new Addition(left, right);
     }
 
     @Override
     public Expression visitVariable(ExprParser.VariableContext ctx) {
-        return super.visitVariable(ctx);
+        Token idToken = ctx.ID().getSymbol();
+        int line = idToken.getLine();
+        int column = idToken.getCharPositionInLine();
+        String id = ctx.getChild(0).getText();
+        if(!vars.contains(id)) {
+            semanticErrors.add("Error : variable " + id + "not declared ("  + line + ", " + column + ")" );
+        }
+        return  new Variable(id);
     }
 
     @Override
     public Expression visitNumber(ExprParser.NumberContext ctx) {
-        return super.visitNumber(ctx);
+        String numText = ctx.getChild(0).getText();
+        int num = Integer.parseInt(numText);
+        return new Number(num);
     }
 }
