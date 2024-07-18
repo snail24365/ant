@@ -8,7 +8,7 @@ import java.util.List;
 
 public class AntlrToProgram extends ExprBaseVisitor<Program> {
 
-    private List<String> semanticErrors; // 1. dup 2. undeclared
+    public List<String> semanticErrors; // 1. dup 2. undeclared
 
 //    public AtlrToProgram(List<String> semanticErrors) {
 //        this.semanticErrors = semanticErrors;
@@ -31,6 +31,6 @@ public class AntlrToProgram extends ExprBaseVisitor<Program> {
                 prog.addExpression(exprVisitor.visit(ctx.getChild(i)));
             }
         }
-        return super.visitProgram(ctx);
+        return prog;
     }
 }

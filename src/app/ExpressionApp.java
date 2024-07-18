@@ -2,7 +2,7 @@ package app;
 
 import antlr.ExprLexer;
 import antlr.ExprParser;
-import expression.AntlrToExpression;
+import expression.*;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -20,8 +20,25 @@ public class ExpressionApp {
             String fileName = args[0];
             ExprParser parser = getParser(fileName);
 
-
             ParseTree antlrAst = parser.prog();
+
+            if(MyErrorListener.hasError) {
+                int a= 1;
+            }else {
+                AntlrToProgram progVisitor = new AntlrToProgram();
+                Program prog = progVisitor.visit(antlrAst);
+
+                if(progVisitor.semanticErrors.isEmpty()){
+                    ExpressionProcessor ep = new ExpressionProcessor(prog.expressions);
+                    for (String evaluation : ep.getEvaluationResults()) {
+                        System.out.println(evaluation);
+                    }
+                } else {
+                    for(String err : progVisitor.semanticErrors) {
+                        System.out.println(err);
+                    }
+                }
+            }
 
 
 
@@ -36,6 +53,9 @@ public class ExpressionApp {
             ExprLexer lexer = new ExprLexer(input);
             CommonTokenStream tokens = new CommonTokenStream(lexer);
             parser = new ExprParser(tokens);
+
+            parser.removeErrorListeners();
+            parser.addErrorListener(new MyErrorListener());
 
         } catch (IOException e) {
             e.printStackTrace();

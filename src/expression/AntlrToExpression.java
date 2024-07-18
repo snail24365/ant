@@ -55,7 +55,7 @@ public class AntlrToExpression extends ExprBaseVisitor<Expression> {
         if(!vars.contains(id)) {
             semanticErrors.add("Error : variable " + id + "not declared ("  + line + ", " + column + ")" );
         }
-        return  new Variable(id);
+        return new Variable(id);
     }
 
     @Override
